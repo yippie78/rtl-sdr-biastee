@@ -4,3 +4,84 @@ turns your Realtek RTL2832 based DVB dongle into a SDR receiver
 
 For more information see:
 https://osmocom.org/projects/rtl-sdr/wiki
+
+
+
+RTL-SDR (bias-tee)
+===============================
+; https://github.com/osmocom/rtl-sdr
+sudo git clone git://git.osmocom.org/rtl-sdr.git
+cd rtl-sdr/
+sudo mkdir build
+cd build/
+sudo cmake ../ -DINSTALL_UDEV_RULES=OFF -DDETACH_KERNEL_DRIVER=ON -DENABLE_ZEROCOPY=OFF
+sudo make
+
+; rtl-sdr-biastee/build/src$
+cd src
+; make bias-tee "ON" until reboot
+./rtl_biast -b 1
+; make bias-tee "OFF" until reboot
+./rtl_biast -b 0
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+MAKE BIAS TEE ALWAYS ON
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+sudo ./rtl_eeprom -b y
+Found 1 device(s):
+  0:  Generic RTL2832U OEM
+
+Using device 0: Generic RTL2832U OEM
+Found Rafael Micro R820T tuner
+
+Current configuration:
+__________________________________________
+Vendor ID:              0x0bxx
+Product ID:             0x28xx
+Manufacturer:           Realtek
+Product:                RTL2838UHIDIR
+Serial number:          00000001
+Serial number enabled:  yes
+Bias-T Always ON:       no
+Direct Sampling Always ON:      no
+__________________________________________
+
+New configuration:
+__________________________________________
+Vendor ID:              0x0bxx
+Product ID:             0x28xx
+Manufacturer:           Realtek
+Product:                RTL2838UHIDIR
+Serial number:          00000001
+Serial number enabled:  yes
+Bias-T Always ON:       yes
+Direct Sampling Always ON:      no
+__________________________________________
+Write new configuration to device [y/n]? y
+
+Configuration successfully written.
+Please replug the device for changes to take effect.
+
+#####################
+WARNING: 
+#####################
+To make things clearer: 
+DC Short Antenna -> LNA -> Coax -> V3(bias tee on) is absolutely fine. 
+DC Short Antenna -> Coax -> V3(bias tee on) is not fine. 
+DC Short Antenna -> Coax -> V3(bias tee off) is fine.
+
+Before using the bias tee please ensure that you understand that you should not use this option 
+when the dongle is connected directly to a DC short circuited antenna unless you are using an LNA. 
+Although the bias tee circuit is dual protected against accidental shorts with a thermal self-resetting 
+fuse and overcurrent protection on the LDO, short circuiting the bias tee for an extended period of 
+time (days) could damage the LDO or fuse permanently. Only use it while connected to an actual powered 
+device, like an LNA, active antenna or the SpyVerter.
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+; write to eeprom, not working
+sudo rtl_eeprom -b y
+; download eeprom config
+sudo rtl_eeprom -r rtlsdr-eeprom.txt
+; upload eeprom config
+sudo rtl_eeprom -w rtlsdr-eeprom.txt
+
